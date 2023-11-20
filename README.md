@@ -1,6 +1,6 @@
 # wp-to-psr4
 
-Migrate a WordPress-style code base to PSR-4. For example:
+Migrate a WordPress-style code base to PSR-4 file structure. For example:
 
 ```
 src/example/path/to/class-file.php -> src/Example/Path/To/ClassFile.php

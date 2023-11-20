@@ -1,6 +1,6 @@
 {
     "name": "alleyinteractive/wp-to-psr-4",
-    "description": "Convert a WordPress codebase to PSR-4",
+    "description": "Migrate a WordPress-style code base to PSR-4 file structure.",
     "license": "GPL-2.0-or-later",
     "type": "project",
     "authors": [
