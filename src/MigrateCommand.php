@@ -49,11 +49,15 @@ class MigrateCommand extends Command
         if ($dryRun) {
             $output->writeln('<info>Running in dry-run mode, no files will be moved.</info>');
         }
+
         if (! $baseDir || ! is_dir($baseDir)) {
             $output->writeln('<error>Invalid path provided.</error>');
 
             return Command::FAILURE;
         }
+
+        // Ensure the base path does not end with a trailing slash.
+        $baseDir = rtrim($baseDir, DIRECTORY_SEPARATOR);
 
         $output->writeln("<info>Migrating WordPress codebase at {$baseDir}...</info>");
 
@@ -223,23 +227,31 @@ class MigrateCommand extends Command
 
         // Now convert the paths to a CamelCase/Structure after the base path.
         return $dirs->map(function ($dir) use ($basePath) {
-            $parts = str($dir)
-                ->after($basePath.DIRECTORY_SEPARATOR)
-                ->explode(DIRECTORY_SEPARATOR);
+            // Ignore the base path.
+            if ($basePath === $dir) {
+                return null;
+            }
 
-            // Only move the deepest nested folder.
+            $dir = str($dir);
+
+            if (! $dir->startsWith($basePath)) {
+                throw new \RuntimeException("Directory {$dir} does not start with the base path {$basePath}.");
+            }
+
+            $parts = $dir->after($basePath.DIRECTORY_SEPARATOR)->explode(DIRECTORY_SEPARATOR);
+
+            // Only rename the deepest nested folder.
             $folder = str($parts->pop())
                 ->studly()
                 ->replace('Wordpress', 'WordPress')
                 ->value();
 
+            $parts->push($folder);
+
             // Otherwise, return the path to the folder.
             return [
                 $dir,
-                str($parts->implode(DIRECTORY_SEPARATOR))
-                    ->prepend($basePath.DIRECTORY_SEPARATOR)
-                    ->append(DIRECTORY_SEPARATOR.$folder)
-                    ->value(),
+                (string) str($parts->implode(DIRECTORY_SEPARATOR))->prepend($basePath.DIRECTORY_SEPARATOR),
             ];
         })
             ->unique()
