@@ -11,7 +11,7 @@ src/example/interface-ReusableInterface.php -> src/Example/ReusableInterface.php
 ## Installation
 
 ```
-composer global require alleyinteractive/wp-to-psr4
+composer global require alleyinteractive/wp-to-psr-4
 ```
 
 ## Usage
