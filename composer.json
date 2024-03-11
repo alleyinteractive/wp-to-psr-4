@@ -29,5 +29,8 @@
     "scripts": {
         "pint": "pint bin/wp-to-psr-4 src",
         "test": ""
-    }
+    },
+    "bin": [
+        "bin/wp-to-psr-4"
+    ]
 }
