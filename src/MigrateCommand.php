@@ -36,8 +36,8 @@ class MigrateCommand extends Command
     /**
      * Execute the command.
      *
-     * @param  InputInterface  $input Input interface.
-     * @param  OutputInterface  $output Output interface.
+     * @param  InputInterface  $input  Input interface.
+     * @param  OutputInterface  $output  Output interface.
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
