@@ -69,11 +69,9 @@ class MigrateCommand extends Command
             [$type, $oldPath, $newPath, $oldClassName, $newClassName] = $file;
 
             if ($dryRun) {
-                $output->writeln("<info>Would move {$oldPath} to {$newPath}.</info>");
-
-                continue;
+                $output->writeln("<info>Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.</info>");
             } else {
-                $output->writeln("<comment>Moving {$oldPath} to {$newPath}...</comment>");
+                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$newPath}");
@@ -82,15 +80,13 @@ class MigrateCommand extends Command
                 }
             }
 
-            $output->writeln("<comment>Updating class name in {$newPath}...</comment>");
-
-            $contents = str(file_get_contents($newPath));
-
             if ($dryRun) {
-                $output->writeln("<info>Would replace {$oldClassName} with {$newClassName} in {$newPath}.</info>");
-
-                continue;
+                $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPath}</comment>.</info>");
             } else {
+                $contents = str(file_get_contents($newPath));
+
+                $output->writeln("<comment>Updating class name in <comment>{$newPath}</comment>...</comment>");
+
                 file_put_contents($newPath, $contents->replace("{$type} {$oldClassName} ", "{$type} {$newClassName} ")->value());
             }
         }
@@ -112,11 +108,11 @@ class MigrateCommand extends Command
             [$oldPath, $newPath] = $item;
 
             if ($dryRun) {
-                $output->writeln("<info>Would move {$oldPath} to {$newPath}.</info>");
+                $output->writeln("<info>Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.</info>");
             } elseif (! is_dir($oldPath)) {
-                $output->writeln("<error>Old directory {$oldPath} does not exist, ignoring...</error>");
+                $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring...</error>");
             } else {
-                $output->writeln("<comment>Moving {$oldPath} to {$newPath}...</comment>");
+                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$oldPath}-bak");
@@ -147,7 +143,8 @@ class MigrateCommand extends Command
             ->files()
             ->in($path)
             ->name('*.php')
-            ->notPath($exclude);
+            ->notPath($exclude)
+            ->notName('bootstrap.php');
 
         foreach ($finder as $file) {
             // Check if the file name has any uppercase letters.
@@ -158,6 +155,13 @@ class MigrateCommand extends Command
             }
 
             $type = str($file->getFilename())->before('-')->value();
+
+            // Map the type name to the value that would appear in the PHP file
+            // when declaring the object type.
+            $typeDeclaration = match ($type) {
+                'test' => 'class',
+                default => $type,
+            };
 
             if (! in_array($type, ['class', 'trait', 'interface', 'enum', 'test'], true)) {
                 $output->writeln("<error>File {$file->getRelativePathname()} does not seem like a valid WordPress file (unknown type), ignoring...</error>");
@@ -181,21 +185,21 @@ class MigrateCommand extends Command
                 ->studlyUnderscore()
                 ->when(
                     $type === 'test',
-                    fn (Stringable $str) => $str->append('Test_')
+                    fn (Stringable $str) => $str->prepend('Test_')
                 )
                 ->replace('Wordpress', 'WordPress');
 
             // Check if the class name is found in the file.
             $contents = str($file->getContents());
 
-            if (! $contents->contains("{$type} {$oldClassName} ", true)) {
+            if (! $contents->contains("{$typeDeclaration} {$oldClassName} ", true)) {
                 $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()}, ignoring...</error>");
 
                 continue;
             }
 
             $index[] = [
-                $type === 'test' ? 'class' : $type,
+                $typeDeclaration,
                 $file->getRealPath(),
                 $file->getPath().DIRECTORY_SEPARATOR.$newClassName->value().'.php',
                 $oldClassName->value(),
