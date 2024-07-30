@@ -242,7 +242,6 @@ class MigrateCommand extends Command
         $dirs = $dirs
             ->unique()
             ->values()
-            ->dd()
             // Sort by the deepest nested folders first.
             ->sort(fn ($a, $b) => substr_count($b, DIRECTORY_SEPARATOR) <=> substr_count($a, DIRECTORY_SEPARATOR));
 
