@@ -69,7 +69,7 @@ class MigrateCommand extends Command
             [$type, $oldPath, $newPath, $oldClassName, $newClassName] = $file;
 
             if ($dryRun) {
-                $output->writeln("<info>Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.</info>");
+                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
             } else {
                 $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
 
@@ -108,7 +108,7 @@ class MigrateCommand extends Command
             [$oldPath, $newPath] = $item;
 
             if ($dryRun) {
-                $output->writeln("<info>Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.</info>");
+                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
             } elseif (! is_dir($oldPath)) {
                 $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring...</error>");
             } else {
@@ -139,7 +139,7 @@ class MigrateCommand extends Command
     {
         $index = [];
 
-        $finder = (new Finder())
+        $finder = (new Finder)
             ->files()
             ->in($path)
             ->name('*.php')
@@ -216,16 +216,33 @@ class MigrateCommand extends Command
      */
     protected function collectDirectories(OutputInterface $output, string $basePath, array $fileIndex): array
     {
-        $dirs = new Collection();
+        $dirs = new Collection;
 
         foreach ($fileIndex as $file) {
             [,, $newPath] = $file;
 
+            if ($dirs->contains($newPath)) {
+                continue;
+            }
+
             $dirs->push(dirname($newPath));
+
+            // Add the parent folders of the file as well until we reach the base path.
+            while (true) {
+                $newPath = dirname($newPath);
+
+                if ($newPath === $basePath) {
+                    break;
+                }
+
+                $dirs->push($newPath);
+            }
         }
 
         $dirs = $dirs
             ->unique()
+            ->values()
+            ->dd()
             // Sort by the deepest nested folders first.
             ->sort(fn ($a, $b) => substr_count($b, DIRECTORY_SEPARATOR) <=> substr_count($a, DIRECTORY_SEPARATOR));
 

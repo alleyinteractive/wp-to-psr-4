@@ -10,7 +10,7 @@ if (file_exists(__DIR__.'/../../../autoload.php')) {
 }
 
 $app = new Symfony\Component\Console\Application('wp-to-psr-4', '0.0.1');
-$app->add(new MigrateCommand());
+$app->add(new MigrateCommand);
 $app->setDefaultCommand('migrate', true);
 
 $app->run();
