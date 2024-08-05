@@ -10,7 +10,19 @@ src/example/interface-ReusableInterface.php -> src/Example/ReusableInterface.php
 
 ## Installation
 
+You can download the latest phar from the [releases
+page](https://github.com/alleyinteractive/wp-to-psr-4/releases) using the
+following example:
+
+```bash
+wget https://github.com/alleyinteractive/wp-to-psr-4/releases/download/v1.0.3/wp-to-psr4.phar
+chmod +x wp-to-psr4.phar
+mv wp-to-psr4.phar /usr/local/bin/wp-to-psr4
 ```
+
+Or you can install it globally using Composer:
+
+```bash
 composer global require alleyinteractive/wp-to-psr-4
 ```
 
