@@ -179,32 +179,43 @@ class MigrateCommand extends Command
                 )
                 ->replace('Wordpress', 'WordPress');
 
-            $oldClassName = str($file->getFilename())
+            $oldClassNameStr = str($file->getFilename())
                 ->after("{$type}-")
                 ->before('.php')
                 ->studlyUnderscore()
-                ->when(
-                    $type === 'test',
-                    fn (Stringable $str) => $str->prepend('Test_')
-                )
                 ->replace('Wordpress', 'WordPress');
+
+            $oldClassNames = [$oldClassNameStr];
+
+            if ($type === 'test') {
+                $oldClassNames = [
+                    $oldClassNameStr->prepend('Test_'),
+                    $oldClassNameStr->append('_Test'),
+                ];
+            }
 
             // Check if the class name is found in the file.
             $contents = str($file->getContents());
 
-            if (! $contents->contains("{$typeDeclaration} {$oldClassName} ", true)) {
-                $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()}, ignoring...</error>");
+            // Check if the class name is found in the file.
+            foreach ($oldClassNames as $oldClassName) {
+                if (! $contents->contains("{$typeDeclaration} {$oldClassName} ", true)) {
+                    continue;
+                }
 
-                continue;
+                $index[] = [
+                    $typeDeclaration,
+                    $file->getRealPath(),
+                    $file->getPath().DIRECTORY_SEPARATOR.$newClassName->value().'.php',
+                    $oldClassName->value(),
+                    $newClassName->value(),
+                ];
+
+                // Break out of the loop if we found the class name for the file and continue to the next file.
+                continue 2;
             }
 
-            $index[] = [
-                $typeDeclaration,
-                $file->getRealPath(),
-                $file->getPath().DIRECTORY_SEPARATOR.$newClassName->value().'.php',
-                $oldClassName->value(),
-                $newClassName->value(),
-            ];
+            $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()}, ignoring...</error>");
         }
 
         return $index;
