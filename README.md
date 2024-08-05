@@ -1,4 +1,4 @@
-# wp-to-psr4
+# wp-to-psr-4
 
 Migrate a WordPress-style code base to PSR-4 file structure. For example:
 
