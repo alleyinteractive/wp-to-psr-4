@@ -1,34 +1,33 @@
 {
-    "name": "alleyinteractive/wp-to-psr-4",
-    "description": "Migrate a WordPress-style code base to PSR-4 file structure.",
-    "license": "GPL-2.0-or-later",
-    "type": "project",
-    "authors": [
-        {
-            "name": "Sean Fisher",
-            "email": "sean@alley.com"
-        }
-    ],
-    "require": {
-        "php": "^8.2|^8.3",
-        "symfony/console": "^6.0|^7.0",
-        "symfony/process": "^6.0|^7.0",
-        "symfony/finder": "^6.0|^7.0",
-        "illuminate/support": "^10.32|^11.0"
-      },
-      "require-dev": {
-        "laravel/pint": "^1.13"
-    },
-    "autoload": {
-        "psr-4": {
-            "Alley\\WpToPsr4\\": "src/"
-        }
-    },
-    "scripts": {
-        "pint": "pint bin/wp-to-psr-4 src",
-        "test": "echo 'No tests yet.'"
-    },
-    "bin": [
-        "bin/wp-to-psr-4"
-    ]
+  "name": "alleyinteractive/wp-to-psr-4",
+  "description": "Migrate a WordPress-style code base to PSR-4 file structure.",
+  "license": "GPL-2.0-or-later",
+  "type": "project",
+  "authors": [{
+    "name": "Sean Fisher",
+    "email": "sean@alley.com"
+  }],
+  "require": {
+    "php": "^8.2|^8.3",
+    "symfony/console": "^6.0|^7.0",
+    "symfony/process": "^6.0|^7.0",
+    "symfony/finder": "^6.0|^7.0",
+    "illuminate/support": "^10.32|^11.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.13"
+  },
+  "autoload": {
+    "psr-4": {
+      "Alley\\WpToPsr4\\": "src/"
+    }
+  },
+  "scripts": {
+    "build": "box compile",
+    "pint": "pint bin/wp-to-psr-4 src",
+    "test": "echo 'No tests yet.'"
+  },
+  "bin": [
+    "bin/wp-to-psr-4"
+  ]
 }

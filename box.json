@@ -1,0 +1,12 @@
+{
+  "alias": "wp-to-psr4.phar",
+  "check-requirements": false,
+  "chmod": "0700",
+  "exclude-composer-files": false,
+  "directories": [
+    "bin",
+    "src",
+    "vendor"
+  ],
+  "output": "build/wp-to-psr4.phar"
+}
