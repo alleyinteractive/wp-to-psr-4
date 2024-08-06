@@ -30,11 +30,19 @@ class MigrateCommandTest extends TestCase
 
         $tester->assertCommandIsSuccessful();
 
-        // Compare the md5sum of the directories
-        $expectedMd5 = trim(shell_exec("find $fixtures/after -type f -exec md5sum {} + | sort -k 2 | md5sum"));
-        $actualMd5 = trim(shell_exec("find $tempDir -type f -exec md5sum {} + | sort -k 2 | md5sum"));
+        $this->assertEquals($this->getMd5Sum("$fixtures/after"), $this->getMd5Sum($tempDir));
+    }
 
-        // Assert that the md5sums are equal
-        $this->assertEquals($expectedMd5, $actualMd5);
+    protected function getMd5Sum(string $dir): string
+    {
+        $previous = getcwd();
+
+        chdir($dir);
+
+        $md5 = trim(shell_exec('find . -type f -exec md5sum {} + | sort -k 2 | md5sum'));
+
+        chdir($previous);
+
+        return $md5;
     }
 }
