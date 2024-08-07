@@ -15,7 +15,9 @@
     "illuminate/support": "^10.32|^11.0"
   },
   "require-dev": {
-    "laravel/pint": "^1.13"
+    "laravel/pint": "^1.13",
+    "phpunit/phpunit": "^11.3",
+    "symfony/var-dumper": "^7.1"
   },
   "autoload": {
     "psr-4": {
@@ -24,8 +26,13 @@
   },
   "scripts": {
     "build": "box compile",
-    "pint": "pint bin/wp-to-psr-4 src",
-    "test": "echo 'No tests yet.'"
+    "pint": "pint bin/wp-to-psr-4 src tests/Feature",
+    "phpunit": "phpunit",
+    "test": [
+      "pint bin/wp-to-psr-4 src tests/Feature --test",
+      "phpunit"
+    ],
+    "update-fixtures": "rm -rf tests/fixtures/after || true && cp -r tests/fixtures/before tests/fixtures/after && ./bin/wp-to-psr-4 tests/fixtures/after --no-git"
   },
   "bin": [
     "bin/wp-to-psr-4"

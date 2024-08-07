@@ -19,7 +19,7 @@ class MigrateCommand extends Command
     {
         $this->setName('migrate-files')
             ->setDescription('Migrate WordPress codebase files to PSR-4.')
-            ->addArgument('path', InputOption::VALUE_OPTIONAL, 'Path to the WordPress codebase to migrate.', [getcwd()])
+            ->addArgument('path', InputOption::VALUE_OPTIONAL, 'Path to the WordPress codebase to migrate.')
             ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Run the migration without making any changes.')
             ->addOption('no-git', null, InputOption::VALUE_NONE, 'Do not move files with Git.')
             ->addOption('exclude', 'e', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Exclude a directory or file from the migration.');
@@ -41,8 +41,18 @@ class MigrateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $baseDir = realpath($input->getArgument('path')[0]);
+        $baseDir = $input->getArgument('path');
 
+        if (is_array($baseDir)) {
+            $baseDir = $baseDir[0] ?? null;
+        }
+
+        // If no path is provided, default to the current working directory.
+        if (empty($baseDir)) {
+            $baseDir = getcwd();
+        }
+
+        $baseDir = realpath($baseDir);
         $useGit = ! $input->getOption('no-git');
         $dryRun = $input->getOption('dry-run');
 
