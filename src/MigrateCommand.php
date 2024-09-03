@@ -97,14 +97,20 @@ class MigrateCommand extends Command
 
                 $output->writeln("<comment>Updating class name in <comment>{$newPath}</comment>...</comment>");
 
-                file_put_contents($newPath, $contents->replace("{$type} {$oldClassName} ", "{$type} {$newClassName} ")->value());
+                file_put_contents(
+                    $newPath,
+                    $contents->replaceMatches(
+                        "/{$type} {$oldClassName}\b/",
+                        fn ($match) => "{$type} {$newClassName}",
+                    )->value(),
+                );
             }
         }
 
         if ($dryRun) {
             $output->writeln('<info>Dry-run complete, no files were moved.</info>');
         } else {
-            $output->writeln('<info>File migration complete. All files and classes were renamed. Ensure you have added "psr-4" to the "autoload" section of "composer.json" and run "composer dump-autoload".</info>');
+            $output->writeln('<info>File migration complete.</info>');
         }
 
         $output->writeln('');
@@ -138,6 +144,11 @@ class MigrateCommand extends Command
         } else {
             $output->writeln('<info>Directory migration complete.</info>');
         }
+
+        $output->writeln('');
+        $output->writeln('<info>All matched files/directories/classes were renamed to match PSR-4 autoloading standards. Ensure you have added "psr-4" to the "autoload" section of "composer.json" and run "composer dump-autoload".</info>');
+
+        // TODO: Provide autoload example.
 
         return Command::SUCCESS;
     }
@@ -209,7 +220,7 @@ class MigrateCommand extends Command
 
             // Check if the class name is found in the file.
             foreach ($oldClassNames as $oldClassName) {
-                if (! $contents->contains("{$typeDeclaration} {$oldClassName} ", true)) {
+                if (! $contents->match("/{$typeDeclaration} {$oldClassName}\b/")) {
                     continue;
                 }
 
@@ -225,7 +236,7 @@ class MigrateCommand extends Command
                 continue 2;
             }
 
-            $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()}, ignoring...</error>");
+            $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()} (type {$type}), ignoring file...</error>");
         }
 
         return $index;
