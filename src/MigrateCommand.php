@@ -98,9 +98,14 @@ class MigrateCommand extends Command
             if ($dryRun) {
                 $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPathWithoutBase}</comment>.</info>");
             } else {
-                $output->writeln("<info>Updating class name in <comment>{$newPathWithoutBase}</comment></info>");
-
                 $contents = str(file_get_contents($newPath));
+
+                // Throw an exception because this should have been caught in the collectPhpFiles() method.
+                if (! $contents->isMatch("/{$type} {$oldClassName}\b/")) {
+                    throw new \RuntimeException("Cannot find class name {$oldClassName} in file {$newPathWithoutBase}");
+                }
+
+                $output->writeln("<info>Updating class name in <comment>{$newPathWithoutBase}</comment> from <comment>{$oldClassName}</comment> to <comment>{$newClassName}</comment></info>");
 
                 file_put_contents(
                     $newPath,
@@ -242,7 +247,7 @@ EOF
 
             // Check if the class name is found in the file.
             foreach ($oldClassNames as $oldClassName) {
-                if (! $contents->match("/{$typeDeclaration} {$oldClassName}\b/")) {
+                if (! $contents->isMatch("/{$typeDeclaration} {$oldClassName}\b/")) {
                     continue;
                 }
 
