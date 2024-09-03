@@ -147,8 +147,22 @@ class MigrateCommand extends Command
 
         $output->writeln('');
         $output->writeln('<info>All matched files/directories/classes were renamed to match PSR-4 autoloading standards. Ensure you have added "psr-4" to the "autoload" section of "composer.json" and run "composer dump-autoload".</info>');
-
-        // TODO: Provide autoload example.
+        $output->writeln('');
+        $output->writeln('<info>Example JSON for your "composer.json" file:</info>');
+        $output->writeln(
+            <<<'EOF'
+<bg=yellow;options=bold>
+{
+    "name": "vendor/your-plugin",
+    "autoload-dev": {
+        "psr-4": {
+            "Alley\WP\Create_WordPress_Plugin\Tests\": "tests"
+        }
+    }
+}
+</>
+EOF
+        );
 
         return Command::SUCCESS;
     }
