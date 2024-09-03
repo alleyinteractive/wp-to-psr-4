@@ -78,10 +78,13 @@ class MigrateCommand extends Command
         foreach ($files as $file) {
             [$type, $oldPath, $newPath, $oldClassName, $newClassName] = $file;
 
+            $oldPathWithoutBase = str($oldPath)->after($baseDir.DIRECTORY_SEPARATOR);
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
+
             if ($dryRun) {
-                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
+                $output->writeln("Would move <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.");
             } else {
-                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
+                $output->writeln("<info>Moving <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment></info>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$newPath}");
@@ -90,12 +93,14 @@ class MigrateCommand extends Command
                 }
             }
 
-            if ($dryRun) {
-                $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPath}</comment>.</info>");
-            } else {
-                $contents = str(file_get_contents($newPath));
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
 
-                $output->writeln("<comment>Updating class name in <comment>{$newPath}</comment>...</comment>");
+            if ($dryRun) {
+                $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPathWithoutBase}</comment>.</info>");
+            } else {
+                $output->writeln("<info>Updating class name in <comment>{$newPathWithoutBase}</comment></info>");
+
+                $contents = str(file_get_contents($newPath));
 
                 file_put_contents(
                     $newPath,
@@ -114,7 +119,7 @@ class MigrateCommand extends Command
         }
 
         $output->writeln('');
-        $output->writeln('<info>Starting directory migration...</info>');
+        $output->writeln('<info>Starting directory migration</info>');
 
         $directories = $this->collectDirectories($output, $baseDir, $files);
 
@@ -123,12 +128,15 @@ class MigrateCommand extends Command
         foreach ($directories as $item) {
             [$oldPath, $newPath] = $item;
 
+            $oldPathWithoutBase = str($oldPath)->after($baseDir.DIRECTORY_SEPARATOR);
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
+
             if ($dryRun) {
-                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
+                $output->writeln("Would move <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.");
             } elseif (! is_dir($oldPath)) {
-                $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring...</error>");
+                $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring.</error>");
             } else {
-                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
+                $output->writeln("<info>Moving <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.</info>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$oldPath}-bak");
