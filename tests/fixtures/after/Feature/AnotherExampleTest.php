@@ -4,9 +4,11 @@ namespace Alley\WpToPsr4\Fixtures\Tests\Feature;
 
 use PHPUnit\Framework\TestCase;
 
-class Test_Example_Base_Feature extends TestCase {
-    use Concerns\Example_Concern;
-
+/**
+ * This class has the bracket on the following line from the class declaration.
+ */
+class AnotherExampleTest extends TestCase
+{
     public function testExample() {
         $this->assertTrue(true);
     }

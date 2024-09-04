@@ -78,10 +78,13 @@ class MigrateCommand extends Command
         foreach ($files as $file) {
             [$type, $oldPath, $newPath, $oldClassName, $newClassName] = $file;
 
+            $oldPathWithoutBase = str($oldPath)->after($baseDir.DIRECTORY_SEPARATOR);
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
+
             if ($dryRun) {
-                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
+                $output->writeln("Would move <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.");
             } else {
-                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
+                $output->writeln("<info>Moving <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment></info>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$newPath}");
@@ -90,25 +93,38 @@ class MigrateCommand extends Command
                 }
             }
 
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
+
             if ($dryRun) {
-                $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPath}</comment>.</info>");
+                $output->writeln("<info>Would replace <comment>{$oldClassName}</comment> with <comment>{$newClassName}</comment> in <comment>{$newPathWithoutBase}</comment>.</info>");
             } else {
                 $contents = str(file_get_contents($newPath));
 
-                $output->writeln("<comment>Updating class name in <comment>{$newPath}</comment>...</comment>");
+                // Throw an exception because this should have been caught in the collectPhpFiles() method.
+                if (! $contents->isMatch("/{$type} {$oldClassName}\b/")) {
+                    throw new \RuntimeException("Cannot find class name {$oldClassName} in file {$newPathWithoutBase}");
+                }
 
-                file_put_contents($newPath, $contents->replace("{$type} {$oldClassName} ", "{$type} {$newClassName} ")->value());
+                $output->writeln("<info>Updating class name in <comment>{$newPathWithoutBase}</comment> from <comment>{$oldClassName}</comment> to <comment>{$newClassName}</comment></info>");
+
+                file_put_contents(
+                    $newPath,
+                    $contents->replaceMatches(
+                        "/{$type} {$oldClassName}\b/",
+                        fn ($match) => "{$type} {$newClassName}",
+                    )->value(),
+                );
             }
         }
 
         if ($dryRun) {
             $output->writeln('<info>Dry-run complete, no files were moved.</info>');
         } else {
-            $output->writeln('<info>File migration complete. All files and classes were renamed. Ensure you have added "psr-4" to the "autoload" section of "composer.json" and run "composer dump-autoload".</info>');
+            $output->writeln('<info>File migration complete.</info>');
         }
 
         $output->writeln('');
-        $output->writeln('<info>Starting directory migration...</info>');
+        $output->writeln('<info>Starting directory migration</info>');
 
         $directories = $this->collectDirectories($output, $baseDir, $files);
 
@@ -117,12 +133,15 @@ class MigrateCommand extends Command
         foreach ($directories as $item) {
             [$oldPath, $newPath] = $item;
 
+            $oldPathWithoutBase = str($oldPath)->after($baseDir.DIRECTORY_SEPARATOR);
+            $newPathWithoutBase = str($newPath)->after($baseDir.DIRECTORY_SEPARATOR);
+
             if ($dryRun) {
-                $output->writeln("Would move <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>.");
+                $output->writeln("Would move <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.");
             } elseif (! is_dir($oldPath)) {
-                $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring...</error>");
+                $output->writeln("<error>Old directory <comment>{$oldPath}</comment> does not exist, ignoring.</error>");
             } else {
-                $output->writeln("<comment>Moving <comment>{$oldPath}</comment> to <comment>{$newPath}</comment>...</comment>");
+                $output->writeln("<info>Moving <comment>{$oldPathWithoutBase}</comment> to <comment>{$newPathWithoutBase}</comment>.</info>");
 
                 if ($useGit) {
                     exec("git mv {$oldPath} {$oldPath}-bak");
@@ -138,6 +157,25 @@ class MigrateCommand extends Command
         } else {
             $output->writeln('<info>Directory migration complete.</info>');
         }
+
+        $output->writeln('');
+        $output->writeln('<info>All matched files/directories/classes were renamed to match PSR-4 autoloading standards. Ensure you have added "psr-4" to the "autoload" section of "composer.json" and run "composer dump-autoload".</info>');
+        $output->writeln('');
+        $output->writeln('<info>Example JSON for your "composer.json" file:</info>');
+        $output->writeln(
+            <<<'EOF'
+<bg=yellow;options=bold>
+{
+    "name": "vendor/your-plugin",
+    "autoload-dev": {
+        "psr-4": {
+            "Alley\WP\Create_WordPress_Plugin\Tests\": "tests"
+        }
+    }
+}
+</>
+EOF
+        );
 
         return Command::SUCCESS;
     }
@@ -209,7 +247,7 @@ class MigrateCommand extends Command
 
             // Check if the class name is found in the file.
             foreach ($oldClassNames as $oldClassName) {
-                if (! $contents->contains("{$typeDeclaration} {$oldClassName} ", true)) {
+                if (! $contents->isMatch("/{$typeDeclaration} {$oldClassName}\b/")) {
                     continue;
                 }
 
@@ -225,7 +263,7 @@ class MigrateCommand extends Command
                 continue 2;
             }
 
-            $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()}, ignoring...</error>");
+            $output->writeln("<error>Cannot determine the proper class name for {$file->getRelativePathname()} (type {$type}), ignoring file...</error>");
         }
 
         return $index;
